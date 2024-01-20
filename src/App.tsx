@@ -2,24 +2,45 @@ import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import { useAudioRecorder } from "react-audio-voice-recorder";
-import { useTimer } from "react-timer-hook";
 
-function TImery(props: { expiryTime: number }) {
-  const {
-    totalSeconds,
-    seconds,
-    minutes,
-    hours,
-    days,
-    isRunning,
-    start,
-    pause,
-    resume,
-    restart,
-  } = useTimer({
-    expiryTimestamp,
-    onExpire: () => console.warn("onExpire called"),
-  });
+function CountDown(props: { expiryTime: number; onFinished: () => void }) {
+  const { expiryTime, onFinished } = props;
+
+  const calculateMSRemaining = (expiryTime: number): number => {
+    const now = Date.now();
+    if (now > expiryTime) {
+      return 0;
+    } else {
+      return expiryTime - now;
+    }
+  };
+
+  const [msRemaining, setMSRemaining] = useState(
+    calculateMSRemaining(expiryTime)
+  );
+  const [intervalId, setIntervalId] = useState<any | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newRemainingTime = calculateMSRemaining(expiryTime);
+      if (newRemainingTime === 0) {
+        // if (interval !== null) {
+        //   clearInterval(interval);
+        // }
+        onFinished();
+      }
+      setMSRemaining(newRemainingTime);
+    }, 100);
+    setIntervalId(interval);
+
+    return () => clearInterval(interval);
+  }, [onFinished, expiryTime]);
+
+  return (
+    <div>
+      <p>{msRemaining}</p>
+    </div>
+  );
 }
 
 function App() {
@@ -33,6 +54,7 @@ function App() {
     []
   );
   const [totalBlob, saveTotalBlob] = useState<Blob | null>(null);
+  const [expiryTime, setExpiryTime] = useState<number | null>(null);
 
   useEffect(() => {
     const intervalID = setInterval(() => {
@@ -66,9 +88,34 @@ function App() {
         <img src={logo} className="App-logo" alt="logo" />
         {chunks.length > 0 && (
           <>
+            {expiryTime && (
+              <CountDown
+                expiryTime={expiryTime}
+                onFinished={() => {
+                  stopRecording();
+                  setExpiryTime(null);
+                }}
+              />
+            )}
             <p>Current chunk is {chunks[0]}</p>
-            <button onClick={startRecording}>Record</button>
-            <button onClick={stopRecording}>Stop</button>
+            <button
+              onClick={() => {
+                setExpiryTime(Date.now() + 5000);
+                startRecording();
+              }}
+            >
+              Record
+            </button>
+            {recordingBlob && (
+              <button
+                onClick={() => {
+                  stopRecording();
+                  setExpiryTime(null);
+                }}
+              >
+                Stop
+              </button>
+            )}
           </>
         )}
         {clipsSoFar.map((clip) => (
