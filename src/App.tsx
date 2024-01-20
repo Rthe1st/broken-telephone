@@ -43,44 +43,60 @@ function CountDown(props: { expiryTime: number; onFinished: () => void }) {
   );
 }
 
-function App() {
-  const { startRecording, stopRecording, recordingBlob } = useAudioRecorder();
+// todo: this is inplace, change that?
+function shuffleArray<A>(array: A[]): A[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
 
-  const [chunks, setChunks] = useState(["th", "at", "is", "co", "ol"]);
+function App() {
+  const { startRecording, stopRecording, recordingBlob, isRecording } =
+    useAudioRecorder();
+
+  const orderedChunks = ["th", "at", "is", "co", "ol"];
+
+  const [chunks, setChunks] = useState<
+    { letters: string; originalPosition: number }[]
+  >(
+    shuffleArray(
+      orderedChunks.map((c, index) => ({ letters: c, originalPosition: index }))
+    )
+  );
 
   // const [concatBlobs, setConcatBlobs] = useState(null);
   const [lastBlob, saveLastBlob] = useState<Blob | null>(null);
-  const [clipsSoFar, setClipsSoFar] = useState<{ clip: Blob; chunk: string }[]>(
-    []
-  );
+  const [clipsSoFar, setClipsSoFar] = useState<
+    { clip: Blob; letters: string; originalPosition: number }[]
+  >([]);
   const [totalBlob, saveTotalBlob] = useState<Blob | null>(null);
   const [expiryTime, setExpiryTime] = useState<number | null>(null);
 
   useEffect(() => {
-    const intervalID = setInterval(() => {
-      stopRecording();
-    }, 500);
-    return () => clearInterval(intervalID);
-  }, [stopRecording, lastBlob]);
-
-  useEffect(() => {
-    if (!recordingBlob || lastBlob === recordingBlob) {
+    if (!recordingBlob || lastBlob === recordingBlob || isRecording) {
       return;
     }
     saveLastBlob(recordingBlob);
     const newClipsSoFar = [
       ...clipsSoFar,
-      { clip: recordingBlob, chunk: chunks.shift()! },
+      { clip: recordingBlob, ...chunks.shift()! },
     ];
     setClipsSoFar(newClipsSoFar);
-    setChunks(chunks);
-    saveTotalBlob(
-      new Blob(
-        newClipsSoFar.map((a) => a.clip),
-        { type: "audio/ogg; codecs=opus" }
-      )
-    );
-  }, [recordingBlob, lastBlob, clipsSoFar, chunks]);
+    setChunks([...chunks]);
+    if (chunks.length === 0) {
+      const orderedClips = [...newClipsSoFar].sort(
+        (a, b) => a.originalPosition - b.originalPosition
+      );
+      saveTotalBlob(
+        new Blob(
+          orderedClips.map((a) => a.clip),
+          { type: "audio/ogg; codecs=opus" }
+        )
+      );
+    }
+  }, [recordingBlob, lastBlob, clipsSoFar, chunks, isRecording]);
 
   return (
     <div className="App">
@@ -92,21 +108,15 @@ function App() {
               <CountDown
                 expiryTime={expiryTime}
                 onFinished={() => {
-                  stopRecording();
-                  setExpiryTime(null);
+                  if (isRecording) {
+                    stopRecording();
+                    setExpiryTime(null);
+                  }
                 }}
               />
             )}
-            <p>Current chunk is {chunks[0]}</p>
-            <button
-              onClick={() => {
-                setExpiryTime(Date.now() + 5000);
-                startRecording();
-              }}
-            >
-              Record
-            </button>
-            {recordingBlob && (
+            <p>Current chunk is {chunks[0].letters}</p>
+            {isRecording ? (
               <button
                 onClick={() => {
                   stopRecording();
@@ -115,12 +125,21 @@ function App() {
               >
                 Stop
               </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setExpiryTime(Date.now() + 5000);
+                  startRecording();
+                }}
+              >
+                Record
+              </button>
             )}
           </>
         )}
         {clipsSoFar.map((clip) => (
           <>
-            <p>{clip.chunk}</p>
+            <p>{clip.letters}</p>
             <audio controls src={window.URL.createObjectURL(clip.clip)} />
           </>
         ))}
