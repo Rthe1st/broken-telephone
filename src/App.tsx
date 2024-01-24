@@ -52,6 +52,56 @@ function shuffleArray<A>(array: A[]): A[] {
   return array;
 }
 
+async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
+  const audioContext = new window.AudioContext();
+
+  const asBuffers = await Promise.all(
+    clips.map(
+      async (clip) =>
+        await audioContext.decodeAudioData(await clip.arrayBuffer())
+    )
+  );
+
+  const length = asBuffers.reduce(
+    (totalLength, buffer) => totalLength + buffer.length,
+    0
+  );
+  const numberOfChannels = asBuffers.reduce((numberOfChannels, buffer) => {
+    if (numberOfChannels !== buffer.numberOfChannels) {
+      throw Error("audio buffers didn't all have same number of channels");
+    }
+    return numberOfChannels;
+  }, asBuffers[0].numberOfChannels);
+  const sampleRate = asBuffers.reduce((sampleRate, buffer) => {
+    if (sampleRate !== buffer.sampleRate) {
+      throw Error("audio buffers didn't all have same number of channels");
+    }
+    return sampleRate;
+  }, asBuffers[0].sampleRate);
+  const audioBuffer = audioContext.createBuffer(
+    numberOfChannels,
+    length,
+    sampleRate
+  );
+
+  let lengthSoFar = 0;
+
+  for (const buffer of asBuffers) {
+    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      audioBuffer.getChannelData(channel).set(channelData, lengthSoFar);
+    }
+    lengthSoFar += buffer.length;
+  }
+  // start the source playing
+  // source.start();
+  // new Blob(
+  //   orderedClips.map((a) => a.clip),
+  //   { type: "audio/ogg; codecs=opus" }
+  // )
+  return audioBuffer;
+}
+
 function App() {
   const { startRecording, stopRecording, recordingBlob, isRecording } =
     useAudioRecorder();
@@ -71,7 +121,7 @@ function App() {
   const [clipsSoFar, setClipsSoFar] = useState<
     { clip: Blob; letters: string; originalPosition: number }[]
   >([]);
-  const [totalBlob, saveTotalBlob] = useState<Blob | null>(null);
+  const [totalBlob, saveTotalBlob] = useState<AudioBuffer | null>(null);
   const [expiryTime, setExpiryTime] = useState<number | null>(null);
 
   useEffect(() => {
@@ -89,12 +139,9 @@ function App() {
       const orderedClips = [...newClipsSoFar].sort(
         (a, b) => a.originalPosition - b.originalPosition
       );
-      saveTotalBlob(
-        new Blob(
-          orderedClips.map((a) => a.clip),
-          { type: "audio/ogg; codecs=opus" }
-        )
-      );
+      const a = async () =>
+        saveTotalBlob(await concatAudioClips(orderedClips.map((a) => a.clip)));
+      a();
     }
   }, [recordingBlob, lastBlob, clipsSoFar, chunks, isRecording]);
 
@@ -145,7 +192,22 @@ function App() {
         ))}
         <p>all clips together</p>
         {totalBlob && (
-          <audio controls src={window.URL.createObjectURL(totalBlob)} />
+          <button
+            onClick={() => {
+              // todo: don't remake this every time
+              const audioContext = new window.AudioContext();
+              const source = audioContext.createBufferSource();
+              // set the buffer in the AudioBufferSourceNode
+              source.buffer = totalBlob;
+              // connect the AudioBufferSourceNode to the
+              // destination so we can hear the sound
+              source.connect(audioContext.destination);
+              source.start();
+            }}
+          >
+            Play all
+          </button>
+          // <audio controls src={window.URL.createObjectURL(totalBlob)} />
         )}
       </header>
     </div>
