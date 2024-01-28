@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { useAudioRecorder } from "react-audio-voice-recorder";
+import { ChunkRecorder } from "./chunkRecorder";
 
 function chooseSentence() {
   const sentences = [
@@ -161,10 +162,10 @@ async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
   const audioContext = new window.AudioContext();
 
   const asBuffers = await Promise.all(
-    clips.map(
-      async (clip) =>
-        await audioContext.decodeAudioData(await clip.arrayBuffer())
-    )
+    clips.map(async (clip) => {
+      const a = await clip.arrayBuffer();
+      return await audioContext.decodeAudioData(a);
+    })
   );
 
   const length = asBuffers.reduce(
@@ -246,6 +247,21 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        {chunks.length > 0 && (
+          <ChunkRecorder
+            chunks={chunks}
+            recordingFinishedCallback={(data) => {
+              (async () => {
+                const orderedClips = data.toSorted(
+                  (a, b) => a.originalPosition - b.originalPosition
+                );
+                saveTotalBlob(
+                  await concatAudioClips(orderedClips.map((a) => a.clip))
+                );
+              })();
+            }}
+          />
+        )}
         <input
           onChange={(value) =>
             setChunkSize(Number.parseInt(value.target.value))
@@ -254,6 +270,7 @@ function App() {
           value={chunkSize}
         />
         <button
+          style={{ fontSize: 25 }}
           onClick={() => {
             const newSentence = chooseSentence();
             setSentence(newSentence);
@@ -271,41 +288,6 @@ function App() {
         >
           New sentence
         </button>
-        {chunks.length > 0 && (
-          <>
-            <p>{chunks[0].letters}</p>
-            {isRecording ? (
-              <button
-                onClick={() => {
-                  stopRecording();
-                  setExpiryTime(null);
-                }}
-              >
-                Stop
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setExpiryTime(Date.now() + 3000);
-                  startRecording();
-                }}
-              >
-                Record
-              </button>
-            )}
-            {expiryTime && (
-              <CountDown
-                expiryTime={expiryTime}
-                onFinished={() => {
-                  if (isRecording) {
-                    stopRecording();
-                    setExpiryTime(null);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
         {totalBlob && (
           <>
             <p>all clips together</p>
@@ -331,6 +313,7 @@ function App() {
             <></>
           ) : (
             <button
+              style={{ fontSize: 25 }}
               onClick={() => {
                 setShowSentence(!showSentence);
               }}
