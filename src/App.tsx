@@ -203,10 +203,6 @@ async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
 }
 
 function App() {
-  const { startRecording, stopRecording, recordingBlob, isRecording } =
-    useAudioRecorder();
-
-  // const orderedChunks = ["th", "at", "is", "co", "ol"];
   const [chunkSize, setChunkSize] = useState(2);
   const [chunks, setChunks] = useState<
     { letters: string; originalPosition: number }[]
@@ -215,34 +211,7 @@ function App() {
   const [sentence, setSentence] = useState<string | null>(null);
   const [showSentence, setShowSentence] = useState(false);
 
-  // const [concatBlobs, setConcatBlobs] = useState(null);
-  const [lastBlob, saveLastBlob] = useState<Blob | null>(null);
-  const [clipsSoFar, setClipsSoFar] = useState<
-    { clip: Blob; letters: string; originalPosition: number }[]
-  >([]);
   const [totalBlob, saveTotalBlob] = useState<AudioBuffer | null>(null);
-  const [expiryTime, setExpiryTime] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!recordingBlob || lastBlob === recordingBlob || isRecording) {
-      return;
-    }
-    saveLastBlob(recordingBlob);
-    const newClipsSoFar = [
-      ...clipsSoFar,
-      { clip: recordingBlob, ...chunks.shift()! },
-    ];
-    setClipsSoFar(newClipsSoFar);
-    setChunks([...chunks]);
-    if (chunks.length === 0) {
-      const orderedClips = [...newClipsSoFar].toSorted(
-        (a, b) => a.originalPosition - b.originalPosition
-      );
-      const a = async () =>
-        saveTotalBlob(await concatAudioClips(orderedClips.map((a) => a.clip)));
-      a();
-    }
-  }, [recordingBlob, lastBlob, clipsSoFar, chunks, isRecording]);
 
   return (
     <div className="App">
@@ -279,10 +248,7 @@ function App() {
               .filter((O) => O)
               .map((c, index) => ({ letters: c, originalPosition: index }));
             setChunks(shuffleArray(chunked));
-            setClipsSoFar([]);
             saveTotalBlob(null);
-            setExpiryTime(null);
-            saveLastBlob(null);
             setShowSentence(false);
           }}
         >

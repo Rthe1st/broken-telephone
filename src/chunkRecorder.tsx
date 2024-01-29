@@ -22,7 +22,11 @@ export function ChunkRecorder(props: {
       originalPosition: number;
     }[]
   >([]);
-  const clipMarkers = useRef<number[]>([]);
+
+  useEffect(() => {
+    setStarted(false);
+    setRemainingChunks(props.chunks);
+  }, [props.chunks]);
 
   //probably be better to do this outside the component, maybe as a hook?
   useEffect(() => {
@@ -57,24 +61,13 @@ export function ChunkRecorder(props: {
               type: "audio/ogg; codecs=opus",
             }),
           });
-          //   const audioContext = new window.AudioContext();
-          //   const a = await new Blob([event.data], {
-          //     type: "audio/ogg; codecs=opus",
-          //   }).arrayBuffer();
-          //   //   const z = new Int8Array(a);
-          //   //   z[5] = 2;
-          //   //   console.log(new Int8Array(z));
-          //   await audioContext.decodeAudioData(a);
           setRemainingChunks(remainingChunks.slice(1));
           if (
             newMediaRecorder.state === "inactive" &&
             remainingChunks.length === 1
           ) {
             // is passing a ref value here safe?
-            // const nb = new Blob(recordedData.current, {
-            //   type: "audio/ogg; codecs=opus",
-            // });
-            props.recordingFinishedCallback(recordedData.current);
+            props.recordingFinishedCallback([...recordedData.current]);
           }
         };
       }
@@ -112,11 +105,9 @@ export function ChunkRecorder(props: {
                     remainingChunks.length > 0 &&
                     mediaRecorder.state !== "recording"
                   ) {
-                    clipMarkers.current.push(performance.now());
                     mediaRecorder.start();
                     return;
                   }
-                  clipMarkers.current.push(performance.now());
                   mediaRecorder.stop();
                   // we'd prefer to use mediaRecorder.requestData()
                   // but the data chunks produced by that, after the first chunk

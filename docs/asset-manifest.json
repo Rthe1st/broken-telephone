@@ -1,19 +1,15 @@
 {
   "files": {
     "main.css": "/broken-telephone/static/css/main.e4794cc2.css",
-    "main.js": "/broken-telephone/static/js/main.8251770e.js",
-    "static/js/850.92156d0c.chunk.js": "/broken-telephone/static/js/850.92156d0c.chunk.js",
-    "static/js/353.d5872886.chunk.js": "/broken-telephone/static/js/353.d5872886.chunk.js",
+    "main.js": "/broken-telephone/static/js/main.d7723080.js",
     "static/js/787.61d6457d.chunk.js": "/broken-telephone/static/js/787.61d6457d.chunk.js",
     "index.html": "/broken-telephone/index.html",
     "main.e4794cc2.css.map": "/broken-telephone/static/css/main.e4794cc2.css.map",
-    "main.8251770e.js.map": "/broken-telephone/static/js/main.8251770e.js.map",
-    "850.92156d0c.chunk.js.map": "/broken-telephone/static/js/850.92156d0c.chunk.js.map",
-    "353.d5872886.chunk.js.map": "/broken-telephone/static/js/353.d5872886.chunk.js.map",
+    "main.d7723080.js.map": "/broken-telephone/static/js/main.d7723080.js.map",
     "787.61d6457d.chunk.js.map": "/broken-telephone/static/js/787.61d6457d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e4794cc2.css",
-    "static/js/main.8251770e.js"
+    "static/js/main.d7723080.js"
   ]
 }
