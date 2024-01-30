@@ -81,7 +81,6 @@ export function ChunkRecorder(props: {
         <>
           {!started ? (
             <button
-              style={{ fontSize: 25 }}
               onClick={() => {
                 if (mediaRecorder.state !== "recording") {
                   mediaRecorder.start();
@@ -96,10 +95,9 @@ export function ChunkRecorder(props: {
           ) : (
             <>
               {remainingChunks.length > 0 && (
-                <p style={{ fontSize: 20 }}>{remainingChunks[0].letters}</p>
+                <p>{remainingChunks[0].letters}</p>
               )}
               <button
-                style={{ fontSize: 25 }}
                 onClick={() => {
                   if (
                     remainingChunks.length > 0 &&

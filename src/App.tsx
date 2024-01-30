@@ -214,49 +214,31 @@ function App() {
   const [totalBlob, saveTotalBlob] = useState<AudioBuffer | null>(null);
 
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className="App" style={{ fontSize: 25 }}>
+      <header
+        className="App-header"
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+      >
         {chunks.length > 0 && (
-          <ChunkRecorder
-            chunks={chunks}
-            recordingFinishedCallback={(data) => {
-              (async () => {
-                const orderedClips = data.toSorted(
-                  (a, b) => a.originalPosition - b.originalPosition
-                );
-                saveTotalBlob(
-                  await concatAudioClips(orderedClips.map((a) => a.clip))
-                );
-              })();
-            }}
-          />
+          <>
+            <div style={{ marginTop: "40px" }}></div>
+            <ChunkRecorder
+              chunks={chunks}
+              recordingFinishedCallback={(data) => {
+                (async () => {
+                  const orderedClips = data.toSorted(
+                    (a, b) => a.originalPosition - b.originalPosition
+                  );
+                  saveTotalBlob(
+                    await concatAudioClips(orderedClips.map((a) => a.clip))
+                  );
+                })();
+              }}
+            />
+          </>
         )}
-        <input
-          onChange={(value) =>
-            setChunkSize(Number.parseInt(value.target.value))
-          }
-          type="number"
-          value={chunkSize}
-        />
-        <button
-          style={{ fontSize: 25 }}
-          onClick={() => {
-            const newSentence = chooseSentence();
-            setSentence(newSentence);
-            const chunked = newSentence
-              .split(new RegExp("(.{" + chunkSize.toString() + "})"))
-              .filter((O) => O)
-              .map((c, index) => ({ letters: c, originalPosition: index }));
-            setChunks(shuffleArray(chunked));
-            saveTotalBlob(null);
-            setShowSentence(false);
-          }}
-        >
-          New sentence
-        </button>
         {totalBlob && (
           <>
-            <p>all clips together</p>
             <button
               onClick={() => {
                 // todo: don't remake this every time
@@ -272,23 +254,55 @@ function App() {
             >
               Play all
             </button>
+            <div>
+              {sentence === null ? (
+                <></>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowSentence(!showSentence);
+                  }}
+                >
+                  {showSentence ? "Hide" : "Show"} sentence
+                </button>
+              )}
+              {showSentence && <p>{sentence}</p>}
+            </div>
           </>
         )}
-        <div>
-          {sentence === null ? (
-            <></>
-          ) : (
+        {(sentence === null || totalBlob) && (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <input
+              onChange={(value) =>
+                setChunkSize(Number.parseInt(value.target.value))
+              }
+              value={chunkSize}
+              min={2}
+              max={10}
+              style={{ textAlign: "center" }}
+              type="number"
+            />
             <button
-              style={{ fontSize: 25 }}
               onClick={() => {
-                setShowSentence(!showSentence);
+                if (chunkSize < 2 || chunkSize > 10) {
+                  alert("Choose a number between 2 and 10");
+                  return;
+                }
+                const newSentence = chooseSentence();
+                setSentence(newSentence);
+                const chunked = newSentence
+                  .split(new RegExp("(.{" + chunkSize.toString() + "})"))
+                  .filter((O) => O)
+                  .map((c, index) => ({ letters: c, originalPosition: index }));
+                setChunks(shuffleArray(chunked));
+                saveTotalBlob(null);
+                setShowSentence(false);
               }}
             >
-              {showSentence ? "Hide" : "Show"} sentence
+              New sentence
             </button>
-          )}
-          {showSentence && <p>{sentence}</p>}
-        </div>
+          </div>
+        )}
       </header>
     </div>
   );
