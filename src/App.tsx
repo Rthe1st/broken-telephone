@@ -214,80 +214,93 @@ function App() {
   const [totalBlob, saveTotalBlob] = useState<AudioBuffer | null>(null);
 
   return (
-    <div className="App" style={{ fontSize: 25 }}>
-      <header
-        className="App-header"
-        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-      >
-        {chunks.length > 0 && (
-          <>
-            <div style={{ marginTop: "40px" }}></div>
-            <ChunkRecorder
-              chunks={chunks}
-              recordingFinishedCallback={(data) => {
-                (async () => {
-                  const orderedClips = data.toSorted(
-                    (a, b) => a.originalPosition - b.originalPosition
-                  );
-                  saveTotalBlob(
-                    await concatAudioClips(orderedClips.map((a) => a.clip))
-                  );
-                })();
-              }}
-            />
-          </>
-        )}
-        {totalBlob && (
-          <>
-            <button
-              onClick={() => {
-                // todo: don't remake this every time
-                const audioContext = new window.AudioContext();
-                const source = audioContext.createBufferSource();
-                // set the buffer in the AudioBufferSourceNode
-                source.buffer = totalBlob;
-                // connect the AudioBufferSourceNode to the
-                // destination so we can hear the sound
-                source.connect(audioContext.destination);
-                source.start();
+    <div className="App">
+      {chunks.length > 0 && (
+        <>
+          <div style={{ marginTop: "40px" }}></div>
+          <ChunkRecorder
+            chunks={chunks}
+            recordingFinishedCallback={(data) => {
+              (async () => {
+                console.log("finishged");
+                const orderedClips = data.toSorted(
+                  (a, b) => a.originalPosition - b.originalPosition
+                );
+                saveTotalBlob(
+                  await concatAudioClips(orderedClips.map((a) => a.clip))
+                );
+              })();
+            }}
+          />
+        </>
+      )}
+      {totalBlob && (
+        <>
+          <button
+            onClick={() => {
+              // todo: don't remake this every time
+              const audioContext = new window.AudioContext();
+              const source = audioContext.createBufferSource();
+              // set the buffer in the AudioBufferSourceNode
+              source.buffer = totalBlob;
+              // connect the AudioBufferSourceNode to the
+              // destination so we can hear the sound
+              source.connect(audioContext.destination);
+              source.start();
+            }}
+          >
+            Play all
+          </button>
+          <div>
+            {sentence === null ? (
+              <></>
+            ) : (
+              <button
+                onClick={() => {
+                  setShowSentence(!showSentence);
+                }}
+              >
+                {showSentence ? "Hide" : "Show"} sentence
+              </button>
+            )}
+            {showSentence && <p>{sentence}</p>}
+          </div>
+        </>
+      )}
+      {(sentence === null || totalBlob !== null) && (
+        <>
+          <h2>Chunk size?</h2>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <ol
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                listStyleType: "none",
+                paddingLeft: 0,
               }}
             >
-              Play all
-            </button>
-            <div>
-              {sentence === null ? (
-                <></>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowSentence(!showSentence);
-                  }}
-                >
-                  {showSentence ? "Hide" : "Show"} sentence
-                </button>
-              )}
-              {showSentence && <p>{sentence}</p>}
-            </div>
-          </>
-        )}
-        {(sentence === null || totalBlob) && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <input
-              onChange={(value) =>
-                setChunkSize(Number.parseInt(value.target.value))
-              }
-              value={chunkSize}
-              min={2}
-              max={10}
-              style={{ textAlign: "center" }}
-              type="number"
-            />
+              {[...Array(9)].map((_, index) => (
+                <li>
+                  <button
+                    style={{
+                      backgroundColor:
+                        chunkSize === index + 1 ? "red" : "white",
+                    }}
+                    onClick={() => setChunkSize(index + 1)}
+                  >
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
+            </ol>
             <button
               onClick={() => {
-                if (chunkSize < 2 || chunkSize > 10) {
-                  alert("Choose a number between 2 and 10");
-                  return;
-                }
                 const newSentence = chooseSentence();
                 setSentence(newSentence);
                 const chunked = newSentence
@@ -302,8 +315,8 @@ function App() {
               New sentence
             </button>
           </div>
-        )}
-      </header>
+        </>
+      )}
     </div>
   );
 }

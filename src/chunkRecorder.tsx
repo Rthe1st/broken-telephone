@@ -47,6 +47,10 @@ export function ChunkRecorder(props: {
         setMediaRecorder(newMediaRecorder);
       }
       if (newMediaRecorder !== null) {
+        // if (newMediaRecorder.state !== "recording") {
+        //   newMediaRecorder.start();
+        //   setStarted(true);
+        // }
         newMediaRecorder.ondataavailable = async (event: BlobEvent) => {
           console.log("data available");
           if (remainingChunks.length === 0) {
@@ -62,9 +66,11 @@ export function ChunkRecorder(props: {
             }),
           });
           setRemainingChunks(remainingChunks.slice(1));
+          console.log(remainingChunks.length);
           if (
             newMediaRecorder.state === "inactive" &&
-            remainingChunks.length === 1
+            // remainingChunks.length === 1
+            recordedData.current.length === props.chunks.length
           ) {
             // is passing a ref value here safe?
             props.recordingFinishedCallback([...recordedData.current]);
@@ -80,6 +86,9 @@ export function ChunkRecorder(props: {
       {mediaRecorder && (
         <>
           {!started ? (
+            // (
+            //   "Wait"
+            // )
             <button
               onClick={() => {
                 if (mediaRecorder.state !== "recording") {
