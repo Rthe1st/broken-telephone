@@ -6,7 +6,7 @@ export function Guessing(props: {
   finishGame: () => void;
 }) {
   return (
-    <div>
+    <div style={{ paddingTop: "16px" }}>
       <button
         onClick={() => {
           // todo: don't remake this every time
@@ -71,34 +71,36 @@ function ScoreGuess(props: { finishGame: () => void; sentence: string }) {
 
   return (
     <div>
-      <div style={{ letterSpacing: "3px", fontFamily: "monospace" }}>
-        {censoredSentence(guess)}
-      </div>
-      <input
-        hidden={score !== null}
-        onChange={(event) => setGuess(event.target.value)}
-        type="text"
-        value={guess}
-      />
+      <div className="hint-guess">{censoredSentence(guess)}</div>
       {score !== null ? (
-        <div>
+        <div className="score-container">
           <h3>The sentence was:</h3>
-          <p>{styleCorrectLetters(censoredSentence(guess), sentence)}</p>
+          <p className="hint-guess">
+            {styleCorrectLetters(censoredSentence(guess), sentence)}
+          </p>
           <h3>You guessed:</h3>
-          <p>{guess}</p>
+          <p className="hint-guess">{guess}</p>
           <p>
             Score: {score.score}/{score.outOf}
           </p>
         </div>
       ) : (
-        <button
-          onClick={() => {
-            setScore(evaluateAnswer(sentence, guess));
-            props.finishGame();
-          }}
-        >
-          Guess
-        </button>
+        <div className="guess-container">
+          <input
+            hidden={score !== null}
+            onChange={(event) => setGuess(event.target.value)}
+            type="text"
+            value={guess}
+          />
+          <button
+            onClick={() => {
+              setScore(evaluateAnswer(sentence, guess));
+              props.finishGame();
+            }}
+          >
+            Guess
+          </button>
+        </div>
       )}
     </div>
   );

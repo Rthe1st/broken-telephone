@@ -88,7 +88,7 @@ export function ChunkRecorder(props: {
         <>
           {!started ? (
             <>
-              <p>Say the sound(s) of the letters</p>
+              <h2>Say the sounds of the letters</h2>
               <button
                 onClick={() => {
                   if (mediaRecorder.state !== "recording") {
@@ -105,7 +105,7 @@ export function ChunkRecorder(props: {
           ) : (
             <>
               {remainingChunks.length > 0 && (
-                <p>{remainingChunks[0].letters}</p>
+                <p className="chunk">{remainingChunks[0].letters}</p>
               )}
               <button
                 onClick={() => {
@@ -131,7 +131,7 @@ export function ChunkRecorder(props: {
                   //   setRemainingChunks(remainingChunks.slice(1));
                 }}
               >
-                {remainingChunks.length === 1 ? "Stop" : "next"}
+                Next
               </button>
             </>
           )}

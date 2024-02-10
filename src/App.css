@@ -1,8 +1,41 @@
+body {
+  font-size: 16px;
+}
+
 .App {
   text-align: center;
   align-content: center;
 }
 
-.h4 {
+button {
+  font-size: 20px;
+}
+
+.chunk {
   font-size: 25px;
+}
+
+.hint-guess {
+  letter-spacing: 3px;
+  font-family: monospace;
+  font-size: 20px;
+  padding: 16px;
+}
+
+.guess-container {
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  padding-right: 16px;
+  gap: 8px;
+}
+
+.guess-container input {
+  font-size: 20px;
+  text-align: center;
+}
+
+.score-container {
+  padding-left: 16px;
+  padding-right: 16px;
 }

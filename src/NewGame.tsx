@@ -7,7 +7,7 @@ export function NewGame(props: {
 
   return (
     <>
-      <h4>Number of letters?</h4>
+      <h2>Number of letters?</h2>
       <div
         style={{
           display: "flex",
@@ -28,6 +28,7 @@ export function NewGame(props: {
               <button
                 style={{
                   backgroundColor: chunkSize === index + 1 ? "red" : "white",
+                  fontSize: "20px",
                 }}
                 onClick={() => setChunkSize(index + 1)}
               >
@@ -37,7 +38,7 @@ export function NewGame(props: {
           ))}
         </ol>
         <button onClick={() => props.startNewGame(chunkSize, chooseSentence())}>
-          New sentence
+          Start game
         </button>
       </div>
     </>
