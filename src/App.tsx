@@ -203,8 +203,8 @@ async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
 }
 
 function evaluateAnswer(answer: string, guess: string) {
-  const answerWords = answer.split(" ");
-  const guessWords = guess.split(" ");
+  const answerWords = answer.replaceAll(" ", "").split("");
+  const guessWords = guess.replaceAll(" ", "").split("");
 
   let score = 0;
 
@@ -216,7 +216,7 @@ function evaluateAnswer(answer: string, guess: string) {
 
   return {
     score,
-    outOf: answerWords.length,
+    outOf: guess.replaceAll(" ", " ").length,
   };
 }
 
@@ -247,6 +247,21 @@ function ScoreGuess(props: { sentence: string }) {
     return censoredGuess;
   };
 
+  const styleCorrectLetters = (censoredSentence: string, sentence: string) => {
+    return sentence.split("").map((letter, index) => {
+      if (letter === " ") {
+        return letter;
+      } else if (
+        censoredSentence.length > index &&
+        letter === censoredSentence[index]
+      ) {
+        return <span style={{ color: "green" }}>{letter}</span>;
+      } else {
+        return letter;
+      }
+    });
+  };
+
   return (
     <div>
       <div style={{ letterSpacing: "3px", fontFamily: "monospace" }}>
@@ -260,11 +275,11 @@ function ScoreGuess(props: { sentence: string }) {
       {score !== null ? (
         <div>
           <h3>The sentence was:</h3>
-          <p>{sentence}</p>
-          <h3>You guess:</h3>
+          <p>{styleCorrectLetters(censoredSentence(guess), sentence)}</p>
+          <h3>You guessed:</h3>
           <p>{guess}</p>
           <p>
-            Score: {score?.score}/{score?.outOf}
+            Score: {score.score}/{score.outOf}
           </p>
         </div>
       ) : (
