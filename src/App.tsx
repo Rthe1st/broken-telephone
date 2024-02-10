@@ -202,6 +202,84 @@ async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
   return audioBuffer;
 }
 
+function evaluateAnswer(answer: string, guess: string) {
+  const answerWords = answer.split(" ");
+  const guessWords = guess.split(" ");
+
+  let score = 0;
+
+  for (const [index, answerWord] of answerWords.entries()) {
+    if (index < guessWords.length && answerWord === guessWords[index]) {
+      score += 1;
+    }
+  }
+
+  return {
+    score,
+    outOf: answerWords.length,
+  };
+}
+
+function ScoreGuess(props: { sentence: string }) {
+  const { sentence } = props;
+
+  const [guess, setGuess] = useState("");
+  const [score, setScore] = useState<{ score: number; outOf: number } | null>(
+    null
+  );
+
+  const censoredSentence = (guess: string) => {
+    const censoredSentence = sentence
+      .split(" ")
+      .map((word) => "_".repeat(word.length))
+      .join(" ");
+    let censoredGuess = "";
+    let guess2 = guess.replaceAll(" ", "").split("");
+    for (const [index, letter] of censoredSentence.split("").entries()) {
+      if (letter === " ") {
+        censoredGuess += " ";
+      } else if (guess2.length > 0) {
+        censoredGuess += guess2.shift();
+      } else {
+        censoredGuess += letter;
+      }
+    }
+    return censoredGuess;
+  };
+
+  return (
+    <div>
+      <div style={{ letterSpacing: "3px", fontFamily: "monospace" }}>
+        {censoredSentence(guess)}
+      </div>
+      <input
+        onChange={(event) => setGuess(event.target.value)}
+        type="text"
+        value={guess}
+      />
+      {score !== null ? (
+        <div>
+          <h3>The sentence was:</h3>
+          <p>{sentence}</p>
+          <h3>You guess:</h3>
+          <p>{guess}</p>
+          <p>
+            Score: {score?.score}/{score?.outOf}
+          </p>
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            setScore(evaluateAnswer(sentence, guess));
+          }}
+        >
+          Guess
+        </button>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [chunkSize, setChunkSize] = useState(2);
   const [chunks, setChunks] = useState<
@@ -209,7 +287,6 @@ function App() {
   >([]);
 
   const [sentence, setSentence] = useState<string | null>(null);
-  const [showSentence, setShowSentence] = useState(false);
 
   const [totalBlob, saveTotalBlob] = useState<AudioBuffer | null>(null);
 
@@ -222,7 +299,7 @@ function App() {
             chunks={chunks}
             recordingFinishedCallback={(data) => {
               (async () => {
-                console.log("finishged");
+                console.log("recording finished callback");
                 const orderedClips = data.toSorted(
                   (a, b) => a.originalPosition - b.originalPosition
                 );
@@ -251,25 +328,12 @@ function App() {
           >
             Play all
           </button>
-          <div>
-            {sentence === null ? (
-              <></>
-            ) : (
-              <button
-                onClick={() => {
-                  setShowSentence(!showSentence);
-                }}
-              >
-                {showSentence ? "Hide" : "Show"} sentence
-              </button>
-            )}
-            {showSentence && <p>{sentence}</p>}
-          </div>
+          {sentence && <ScoreGuess sentence={sentence} />}
         </>
       )}
       {(sentence === null || totalBlob !== null) && (
         <>
-          <h2>Chunk size?</h2>
+          <h4>Number of letters?</h4>
           <div
             style={{
               display: "flex",
@@ -309,7 +373,6 @@ function App() {
                   .map((c, index) => ({ letters: c, originalPosition: index }));
                 setChunks(shuffleArray(chunked));
                 saveTotalBlob(null);
-                setShowSentence(false);
               }}
             >
               New sentence

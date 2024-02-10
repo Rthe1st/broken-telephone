@@ -26,6 +26,7 @@ export function ChunkRecorder(props: {
   useEffect(() => {
     setStarted(false);
     setRemainingChunks(props.chunks);
+    recordedData.current = [];
   }, [props.chunks]);
 
   //probably be better to do this outside the component, maybe as a hook?
@@ -66,7 +67,7 @@ export function ChunkRecorder(props: {
             }),
           });
           setRemainingChunks(remainingChunks.slice(1));
-          console.log(remainingChunks.length);
+          console.log(remainingChunks.length, recordedData.current.length);
           if (
             newMediaRecorder.state === "inactive" &&
             // remainingChunks.length === 1
@@ -86,19 +87,19 @@ export function ChunkRecorder(props: {
       {mediaRecorder && (
         <>
           {!started ? (
-            // (
-            //   "Wait"
-            // )
-            <button
-              onClick={() => {
-                if (mediaRecorder.state !== "recording") {
-                  mediaRecorder.start();
-                  setStarted(true);
-                }
-              }}
-            >
-              Start
-            </button>
+            <>
+              <p>Say the sound(s) of the letters</p>
+              <button
+                onClick={() => {
+                  if (mediaRecorder.state !== "recording") {
+                    mediaRecorder.start();
+                    setStarted(true);
+                  }
+                }}
+              >
+                Ready?
+              </button>
+            </>
           ) : remainingChunks.length === 0 ? (
             <></>
           ) : (
