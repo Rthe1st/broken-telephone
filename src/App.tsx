@@ -17,7 +17,12 @@ type GameState =
   | {
       answer: string;
       state: "recording";
-      chunks: { letters: string; originalPosition: number }[];
+      chunks: {
+        letters: string;
+        originalPosition: number;
+        originalLetterIndex: number;
+        originalLetterIndexEnd: number;
+      }[];
     }
   | {
       answer: string;
@@ -26,6 +31,8 @@ type GameState =
         letters: string;
         clip: AudioBuffer;
         originalPosition: number;
+        originalLetterIndex: number;
+        originalLetterIndexEnd: number;
       }[];
       chunks: { letters: string; originalPosition: number }[];
     };
@@ -71,7 +78,12 @@ function App() {
             const chunked = answer
               .split(new RegExp("(.{" + chunkSize.toString() + "})"))
               .filter((O) => O)
-              .map((c, index) => ({ letters: c, originalPosition: index }));
+              .map((c, index) => ({
+                letters: c,
+                originalPosition: index,
+                originalLetterIndex: index * chunkSize,
+                originalLetterIndexEnd: index * chunkSize + chunkSize,
+              }));
             setGameState({
               answer,
               chunks: shuffleArray(chunked),

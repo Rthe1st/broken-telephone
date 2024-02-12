@@ -12,12 +12,19 @@ import { useEffect, useRef, useState } from "react";
 // }
 
 export function ChunkRecorder(props: {
-  chunks: { letters: string; originalPosition: number }[];
+  chunks: {
+    letters: string;
+    originalPosition: number;
+    originalLetterIndex: number;
+    originalLetterIndexEnd: number;
+  }[];
   recordingFinishedCallback: (
     data: {
       clip: AudioBuffer;
       letters: string;
       originalPosition: number;
+      originalLetterIndex: number;
+      originalLetterIndexEnd: number;
     }[]
   ) => void;
 }) {
@@ -31,6 +38,8 @@ export function ChunkRecorder(props: {
       clip: AudioBuffer;
       letters: string;
       originalPosition: number;
+      originalLetterIndex: number;
+      originalLetterIndexEnd: number;
     }[]
   >([]);
 
@@ -78,6 +87,8 @@ export function ChunkRecorder(props: {
             clip: await audioContext.decodeAudioData(
               await event.data.arrayBuffer()
             ),
+            originalLetterIndex: remainingChunks[0].originalLetterIndex,
+            originalLetterIndexEnd: remainingChunks[0].originalLetterIndexEnd,
           });
           setRemainingChunks(remainingChunks.slice(1));
           console.log(remainingChunks.length, recordedData.current.length);

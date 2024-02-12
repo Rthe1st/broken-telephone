@@ -5,40 +5,90 @@ export function Guessing(props: {
     letters: string;
     clip: AudioBuffer;
     originalPosition: number;
+    originalLetterIndex: number;
+    originalLetterIndexEnd: number;
   }[];
   answer: string;
   finishGame: () => void;
 }) {
   const audioContext = new window.AudioContext();
 
-  function createAndPlay(clip: AudioBuffer, index: number) {
+  function createAndPlay(
+    clip: {
+      letters: string;
+      clip: AudioBuffer;
+      originalPosition: number;
+      originalLetterIndex: number;
+      originalLetterIndexEnd: number;
+    },
+    index: number,
+    nextClipCallback: (
+      clip: {
+        letters: string;
+        originalPosition: number;
+        originalLetterIndex: number;
+        originalLetterIndexEnd: number;
+      } | null
+    ) => void
+  ) {
     // todo: consider pre-creating the buffers for smoother playback
     const source = audioContext.createBufferSource();
-    source.buffer = clip;
+    source.buffer = clip.clip;
     source.connect(audioContext.destination);
     source.onended = () => {
       if (index + 1 < props.clipsInOrder.length) {
-        createAndPlay(props.clipsInOrder[index + 1].clip, index + 1);
+        createAndPlay(
+          props.clipsInOrder[index + 1],
+          index + 1,
+          nextClipCallback
+        );
+      } else {
+        nextClipCallback(null);
       }
     };
+    nextClipCallback(clip);
     source.start();
   }
+
+  const [currentClip, setCurrentClip] = useState<{
+    letters: string;
+    originalPosition: number;
+    originalLetterIndex: number;
+    originalLetterIndexEnd: number;
+  } | null>(null);
 
   return (
     <div style={{ paddingTop: "16px" }}>
       <button
         onClick={() => {
-          createAndPlay(props.clipsInOrder[0].clip, 0);
+          createAndPlay(props.clipsInOrder[0], 0, (clip) => {
+            setCurrentClip(clip);
+          });
         }}
       >
         Play all
       </button>
-      {<ScoreGuess sentence={props.answer} finishGame={props.finishGame} />}
+      {
+        <ScoreGuess
+          sentence={props.answer}
+          finishGame={props.finishGame}
+          currentClip={currentClip}
+        />
+      }
     </div>
   );
 }
 
-function ScoreGuess(props: { finishGame: () => void; sentence: string }) {
+function ScoreGuess(props: {
+  finishGame: () => void;
+  sentence: string;
+  currentClip: {
+    letters: string;
+    originalPosition: number;
+    originalLetterIndex: number;
+    originalLetterIndexEnd: number;
+  } | null;
+}) {
   const { sentence } = props;
 
   const [guess, setGuess] = useState("");
@@ -62,6 +112,7 @@ function ScoreGuess(props: { finishGame: () => void; sentence: string }) {
         censoredGuess += letter;
       }
     }
+
     return censoredGuess;
   };
 
@@ -80,9 +131,26 @@ function ScoreGuess(props: { finishGame: () => void; sentence: string }) {
     });
   };
 
+  const cs = censoredSentence(guess);
+
   return (
     <div>
-      <div className="hint-guess">{censoredSentence(guess)}</div>
+      <div className="hint-guess">
+        {props.currentClip ? (
+          <>
+            {cs.substring(0, props.currentClip.originalLetterIndex)}
+            <span style={{ backgroundColor: "blue" }}>
+              {cs.substring(
+                props.currentClip.originalLetterIndex,
+                props.currentClip.originalLetterIndexEnd
+              )}
+            </span>
+            {cs.substring(props.currentClip.originalLetterIndexEnd)}
+          </>
+        ) : (
+          cs
+        )}
+      </div>
       {score !== null ? (
         <div className="score-container">
           <h3>The sentence was:</h3>
