@@ -1,23 +1,34 @@
 import { useState } from "react";
 
 export function Guessing(props: {
-  recordedAudio: AudioBuffer;
+  clipsInOrder: {
+    letters: string;
+    clip: AudioBuffer;
+    originalPosition: number;
+  }[];
   answer: string;
   finishGame: () => void;
 }) {
+  const audioContext = new window.AudioContext();
+
+  function createAndPlay(clip: AudioBuffer, index: number) {
+    // todo: consider pre-creating the buffers for smoother playback
+    const source = audioContext.createBufferSource();
+    source.buffer = clip;
+    source.connect(audioContext.destination);
+    source.onended = () => {
+      if (index + 1 < props.clipsInOrder.length) {
+        createAndPlay(props.clipsInOrder[index + 1].clip, index + 1);
+      }
+    };
+    source.start();
+  }
+
   return (
     <div style={{ paddingTop: "16px" }}>
       <button
         onClick={() => {
-          // todo: don't remake this every time
-          const audioContext = new window.AudioContext();
-          const source = audioContext.createBufferSource();
-          // set the buffer in the AudioBufferSourceNode
-          source.buffer = props.recordedAudio;
-          // connect the AudioBufferSourceNode to the
-          // destination so we can hear the sound
-          source.connect(audioContext.destination);
-          source.start();
+          createAndPlay(props.clipsInOrder[0].clip, 0);
         }}
       >
         Play all

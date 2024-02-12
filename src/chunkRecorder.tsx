@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 
+// function convertBlobsToBuffers(clips: Blob[]): Promise<AudioBuffer[]> {
+//   const audioContext = new window.AudioContext();
+
+//   return Promise.all(
+//     clips.map(async (clip) => {
+//       const a = await clip.arrayBuffer();
+//       return await audioContext.decodeAudioData(await clip.arrayBuffer());
+//     })
+//   );
+// }
+
 export function ChunkRecorder(props: {
   chunks: { letters: string; originalPosition: number }[];
   recordingFinishedCallback: (
     data: {
-      clip: Blob;
+      clip: AudioBuffer;
       letters: string;
       originalPosition: number;
     }[]
@@ -17,11 +28,13 @@ export function ChunkRecorder(props: {
   );
   const recordedData = useRef<
     {
-      clip: Blob;
+      clip: AudioBuffer;
       letters: string;
       originalPosition: number;
     }[]
   >([]);
+
+  const audioContext = new window.AudioContext();
 
   useEffect(() => {
     setStarted(false);
@@ -62,9 +75,9 @@ export function ChunkRecorder(props: {
           recordedData.current.push({
             originalPosition: remainingChunks[0].originalPosition,
             letters: remainingChunks[0].letters,
-            clip: new Blob([event.data], {
-              type: "audio/ogg; codecs=opus",
-            }),
+            clip: await audioContext.decodeAudioData(
+              await event.data.arrayBuffer()
+            ),
           });
           setRemainingChunks(remainingChunks.slice(1));
           console.log(remainingChunks.length, recordedData.current.length);

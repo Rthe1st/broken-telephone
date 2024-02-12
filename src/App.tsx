@@ -13,61 +13,20 @@ function shuffleArray<A>(array: A[]): A[] {
   return array;
 }
 
-async function concatAudioClips(clips: Blob[]): Promise<AudioBuffer> {
-  const audioContext = new window.AudioContext();
-
-  const asBuffers = await Promise.all(
-    clips.map(async (clip) => {
-      const a = await clip.arrayBuffer();
-      return await audioContext.decodeAudioData(a);
-    })
-  );
-
-  const length = asBuffers.reduce(
-    (totalLength, buffer) => totalLength + buffer.length,
-    0
-  );
-  const numberOfChannels = asBuffers.reduce((numberOfChannels, buffer) => {
-    if (numberOfChannels !== buffer.numberOfChannels) {
-      throw Error("audio buffers didn't all have same number of channels");
-    }
-    return numberOfChannels;
-  }, asBuffers[0].numberOfChannels);
-  const sampleRate = asBuffers.reduce((sampleRate, buffer) => {
-    if (sampleRate !== buffer.sampleRate) {
-      throw Error("audio buffers didn't all have same number of channels");
-    }
-    return sampleRate;
-  }, asBuffers[0].sampleRate);
-  const audioBuffer = audioContext.createBuffer(
-    numberOfChannels,
-    length,
-    sampleRate
-  );
-
-  let lengthSoFar = 0;
-
-  for (const buffer of asBuffers) {
-    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-      const channelData = buffer.getChannelData(channel);
-      audioBuffer.getChannelData(channel).set(channelData, lengthSoFar);
-    }
-    lengthSoFar += buffer.length;
-  }
-  return audioBuffer;
-}
-
 type GameState =
   | {
       answer: string;
       state: "recording";
-      recordedAudio: null;
       chunks: { letters: string; originalPosition: number }[];
     }
   | {
       answer: string;
       state: "guessing" | "finished";
-      recordedAudio: AudioBuffer;
+      clipsInOrder: {
+        letters: string;
+        clip: AudioBuffer;
+        originalPosition: number;
+      }[];
       chunks: { letters: string; originalPosition: number }[];
     };
 
@@ -88,9 +47,7 @@ function App() {
               setGameState({
                 ...gameState,
                 state: "guessing",
-                recordedAudio: await concatAudioClips(
-                  orderedClips.map((a) => a.clip)
-                ),
+                clipsInOrder: orderedClips,
               });
             })();
           }}
@@ -99,7 +56,7 @@ function App() {
       {(gameState?.state === "guessing" || gameState?.state === "finished") && (
         <Guessing
           answer={gameState.answer}
-          recordedAudio={gameState.recordedAudio}
+          clipsInOrder={gameState.clipsInOrder}
           finishGame={() => {
             setGameState({
               ...gameState,
@@ -119,7 +76,6 @@ function App() {
               answer,
               chunks: shuffleArray(chunked),
               state: "recording",
-              recordedAudio: null,
             });
           }}
         />
