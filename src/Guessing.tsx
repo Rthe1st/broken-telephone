@@ -66,7 +66,7 @@ export function Guessing(props: {
           });
         }}
       >
-        Play all
+        Listen
       </button>
       {
         <ScoreGuess
@@ -157,8 +157,6 @@ function ScoreGuess(props: {
           <p className="hint-guess">
             {styleCorrectLetters(censoredSentence(guess), sentence)}
           </p>
-          <h3>You guessed:</h3>
-          <p className="hint-guess">{guess}</p>
           <p>
             Score: {score.score}/{score.outOf}
           </p>

@@ -112,8 +112,16 @@ export function ChunkRecorder(props: {
         <>
           {!started ? (
             <>
-              <h2>Say the sounds of the letters</h2>
+              <h1>
+                <div>Say</div>
+                <div>the</div>
+                <div>sounds</div>
+                <div>of</div>
+                <div>the</div>
+                <div>letters</div>
+              </h1>
               <button
+                style={{ width: "80%" }}
                 onClick={() => {
                   if (mediaRecorder.state !== "recording") {
                     mediaRecorder.start();
