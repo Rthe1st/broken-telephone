@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function Guessing(props: {
   clipsInOrder: {
@@ -12,43 +12,39 @@ export function Guessing(props: {
   finishGame: () => void;
 }) {
   const audioContext = new window.AudioContext();
+  const currentlyPlayingSources = useRef<AudioBufferSourceNode[]>([]);
 
-  function createAndPlay(
-    clip: {
-      letters: string;
-      clip: AudioBuffer;
-      originalPosition: number;
-      originalLetterIndex: number;
-      originalLetterIndexEnd: number;
-    },
-    index: number,
-    nextClipCallback: (
-      clip: {
-        letters: string;
-        originalPosition: number;
-        originalLetterIndex: number;
-        originalLetterIndexEnd: number;
-      } | null
-    ) => void
-  ) {
-    // todo: consider pre-creating the buffers for smoother playback
-    const source = audioContext.createBufferSource();
-    source.buffer = clip.clip;
-    source.connect(audioContext.destination);
-    source.onended = () => {
-      if (index + 1 < props.clipsInOrder.length) {
-        createAndPlay(
-          props.clipsInOrder[index + 1],
-          index + 1,
-          nextClipCallback
-        );
-      } else {
-        nextClipCallback(null);
-      }
-    };
-    nextClipCallback(clip);
-    source.start();
-  }
+  const audioSourcesFactory = (playClipsAfter: boolean) => {
+    const sources = props.clipsInOrder.map((clip, index) => {
+      const source = audioContext.createBufferSource();
+      source.buffer = clip.clip;
+      source.connect(audioContext.destination);
+      source.onended = () => {
+        if (playClipsAfter && index + 1 < props.clipsInOrder.length) {
+          setCurrentClip(props.clipsInOrder[index + 1]);
+          sources[index + 1].start();
+        } else {
+          setCurrentClip(null);
+        }
+      };
+      return source;
+    });
+    currentlyPlayingSources.current = sources;
+    setCurrentClip(props.clipsInOrder[0]);
+    sources[0].start();
+  };
+
+  const cancelPlaying = () => {
+    setCurrentClip(null);
+    for (const source of currentlyPlayingSources.current) {
+      source.onended = () => {};
+      // hack because you can only call stop on a source that has started
+      // narrow catch or find better way
+      try {
+        source.stop();
+      } catch {}
+    }
+  };
 
   const [currentClip, setCurrentClip] = useState<{
     letters: string;
@@ -61,9 +57,8 @@ export function Guessing(props: {
     <div style={{ paddingTop: "16px" }}>
       <button
         onClick={() => {
-          createAndPlay(props.clipsInOrder[0], 0, (clip) => {
-            setCurrentClip(clip);
-          });
+          cancelPlaying();
+          audioSourcesFactory(true);
         }}
       >
         Listen

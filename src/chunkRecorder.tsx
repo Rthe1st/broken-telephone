@@ -137,7 +137,7 @@ export function ChunkRecorder(props: {
           ) : (
             <>
               {remainingChunks.length > 0 && (
-                <p className="chunk">{remainingChunks[0].letters}</p>
+                <p className="chunk">"{remainingChunks[0].letters}"</p>
               )}
               <button
                 onClick={() => {
