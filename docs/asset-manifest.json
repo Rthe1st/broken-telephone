@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/broken-telephone/static/css/main.74492870.css",
-    "main.js": "/broken-telephone/static/js/main.e71547bd.js",
+    "main.css": "/broken-telephone/static/css/main.a55cc266.css",
+    "main.js": "/broken-telephone/static/js/main.c1f48776.js",
     "static/js/787.61d6457d.chunk.js": "/broken-telephone/static/js/787.61d6457d.chunk.js",
     "index.html": "/broken-telephone/index.html",
-    "main.74492870.css.map": "/broken-telephone/static/css/main.74492870.css.map",
-    "main.e71547bd.js.map": "/broken-telephone/static/js/main.e71547bd.js.map",
+    "main.a55cc266.css.map": "/broken-telephone/static/css/main.a55cc266.css.map",
+    "main.c1f48776.js.map": "/broken-telephone/static/js/main.c1f48776.js.map",
     "787.61d6457d.chunk.js.map": "/broken-telephone/static/js/787.61d6457d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.74492870.css",
-    "static/js/main.e71547bd.js"
+    "static/css/main.a55cc266.css",
+    "static/js/main.c1f48776.js"
   ]
 }
