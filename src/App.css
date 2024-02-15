@@ -18,8 +18,8 @@ button {
 .hint-guess {
   letter-spacing: 3px;
   font-family: monospace;
-  font-size: 20px;
-  padding: 16px;
+  font-size: 40px;
+  /* padding: 16px; */
 }
 
 .guess-container {
@@ -31,11 +31,17 @@ button {
 }
 
 .guess-container input {
-  font-size: 20px;
+  /* font-size: 20px; */
   text-align: center;
 }
 
 .score-container {
   padding-left: 16px;
   padding-right: 16px;
+}
+
+input {
+  /* font-family: monospace; */
+  padding: 0;
+  border: 0;
 }

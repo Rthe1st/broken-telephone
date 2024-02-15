@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { Ref, useRef, useState } from "react";
 
 export function Guessing(props: {
   clipsInOrder: {
@@ -70,6 +70,73 @@ export function Guessing(props: {
           currentClip={currentClip}
         />
       }
+    </div>
+  );
+}
+
+function GuessInput(props: {
+  censoredSentence: string;
+  onGuess: (guessText: string) => void;
+}) {
+  const inputRefs = useRef<HTMLInputElement[]>([]);
+
+  const setFocus = (index: number) => {
+    if (index < inputRefs.current.length) {
+      inputRefs.current[index].focus();
+    }
+  };
+
+  const censoredWithoutSpaces = props.censoredSentence
+    .replaceAll(" ", "")
+    .split("");
+
+  const [inputContent, setInputContent] = useState(censoredWithoutSpaces);
+
+  const inputs = censoredWithoutSpaces.map(
+    (character: string, index: number) => {
+      return (
+        <input
+          className="hint-guess"
+          maxLength={1}
+          // placeholder={inputContent[index]}
+          value={inputContent[index]}
+          ref={(element) => (inputRefs.current[index] = element!)}
+          onKeyUp={(event) => {
+            const newInputContent = [...inputContent];
+            newInputContent[index] = event.key;
+            setInputContent(newInputContent);
+            setFocus(index + 1);
+          }}
+          size={1}
+        />
+      );
+    }
+  );
+
+  return (
+    <div>
+      <div>
+        {props.censoredSentence.split("").map((character: string) => {
+          if (character === " ") {
+            return <span className="hint-guess"> </span>;
+          } else {
+            return inputs.shift();
+          }
+        })}
+      </div>
+      <button
+        onClick={() => {
+          let guess = props.censoredSentence.split("");
+          for (const [index, character] of inputContent.entries()) {
+            if (character !== " ") {
+              guess[index] = character;
+            }
+          }
+          props.onGuess(guess.join(""));
+        }}
+      >
+        Guess
+      </button>
     </div>
   );
 }
@@ -158,20 +225,21 @@ function ScoreGuess(props: {
         </div>
       ) : (
         <div className="guess-container">
-          <input
+          {/* <input
             hidden={score !== null}
             onChange={(event) => setGuess(event.target.value)}
             type="text"
             value={guess}
-          />
-          <button
-            onClick={() => {
-              setScore(evaluateAnswer(sentence, guess));
-              props.finishGame();
-            }}
-          >
-            Guess
-          </button>
+          /> */}
+          {score === null && (
+            <GuessInput
+              censoredSentence={censoredSentence(guess)}
+              onGuess={(guessText: string) => {
+                setScore(evaluateAnswer(sentence, guessText));
+                props.finishGame();
+              }}
+            />
+          )}
         </div>
       )}
     </div>
